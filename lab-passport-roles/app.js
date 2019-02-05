@@ -11,7 +11,7 @@ const path = require("path");
 
 const session = require("express-session");
 const MongoStore = require("connect-mongo")(session);
-const flash = require("connect-flash");
+const flash = require("connect-flash"); // MANAGES ERRORS DURING LOGIN PROCESS
 
 mongoose
   .connect("mongodb://localhost/lab-passport-roles", { useNewUrlParser: true })
@@ -27,14 +27,13 @@ const debug = require("debug")(`${app_name}:${path.basename(__filename).split(".
 
 const app = express();
 
-// Middleware Setup
+// MIDDLEWARE SETUP, INDICATED BY app.use()
 app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Express View engine setup
-
+// EXPRESS VIEW ENGIN SETUP
 app.use(
   require("node-sass-middleware")({
     src: path.join(__dirname, "public"),
@@ -48,19 +47,10 @@ app.set("view engine", "hbs");
 app.use(express.static(path.join(__dirname, "public")));
 app.use(favicon(path.join(__dirname, "public", "images", "favicon.ico")));
 
-hbs.registerHelper("ifUndefined", (value, options) => {
-  if (arguments.length < 2) throw new Error("Handlebars Helper ifUndefined needs 1 parameter");
-  if (typeof value !== undefined) {
-    return options.inverse(this);
-  } else {
-    return options.fn(this);
-  }
-});
+// VALUE FOR TITLE, THAT IS ACCESSIBLE IN THE VIEW DUE TO app.locals
+app.locals.title = "Irongenerate Template with comments";
 
-// default value for title local
-app.locals.title = "Express - Generated with IronGenerator";
-
-// Enable authentication using session + passport
+// ENABLE AUTHENTICATION USING PASSPORT & SESSION AND FLASH FOR ERROR HANDLING
 app.use(
   session({
     secret: "irongenerator",
@@ -72,19 +62,39 @@ app.use(
 app.use(flash());
 require("./passport")(app);
 
+// A FEW HANDLEBARS HELPER EXAMPLES TO EXTEND THE POSSIBILITIES (CONDITIONS, VARIABLES) IN THE VIEW
+hbs.registerHelper("ifUndefined", (value, options) => {
+  if (arguments.length < 2) throw new Error("Handlebars Helper needs ONE parameter");
+
+  let fnTrue = options.inverse;
+  let fnFalse = options.fn;
+
+  return typeof value !== undefined ? fnTrue(this) : fnFalse(this);
+});
+hbs.registerHelper("isSmallerThanSeven", (value, options) => {
+  let fnTrue = options.fn;
+  let fnFalse = options.inverse;
+
+  return value < 7 ? fnTrue(this) : fnFalse(this);
+});
 app.use((req, res, next) => {
   // !! converts: truthy into true; falsy into false
-  // A variable isConnected is defined for the view that will be used
   res.locals.isConnected = !!req.user;
   res.locals.isNotConnected = !!!req.user;
-  if (!!req.user) {
-    res.locals.isBoss = req.user.role === "Boss";
-  }
+
+  hbs.registerHelper("isCurrentUser", function(value, options) {
+    let fnTrue = options.fn;
+    let fnFalse = options.inverse;
+
+    return value === req.user.username ? fnTrue(this) : fnFalse(this);
+  });
+
   next();
 });
 
+// MOUNTPOINT FOR THE ROUTES: if URL is "/..." look for routes in "./routes/..."
 app.use("/", require("./routes/index"));
-app.use("/", require("./routes/protected"));
 app.use("/auth", require("./routes/auth"));
+app.use("/private", require("./routes/private"));
 
 module.exports = app;

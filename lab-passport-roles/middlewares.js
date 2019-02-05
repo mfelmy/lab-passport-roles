@@ -1,22 +1,20 @@
+// DEFINITION OF MIDDLEWARES TO USE IN app.js
 module.exports = {
-  // Middleware that redirects the user to '/login' is not connected
-  isConnected: function(req,res,next) {
-    // If we are connected, express defines a req.user
+  isConnected: function(req, res, next) {
+    // if connected, express defines a req.user
     if (req.user) {
-      next()
-    }
-    else {
-      res.redirect('/auth/login')
+      next();
+    } else {
+      res.redirect("/auth/login");
     }
   },
   checkRole: function(role) {
-    return function(req,res,next) {
+    return function(req, res, next) {
       if (req.user && req.user.role === role) {
-        next()
+        next();
+      } else {
+        res.redirect("/");
       }
-      else {
-        res.redirect('/')
-      }
-    }
-  },
-}
+    };
+  }
+};

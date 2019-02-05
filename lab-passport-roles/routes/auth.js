@@ -1,33 +1,33 @@
 const express = require("express");
-const passport = require('passport');
+const passport = require("passport"); // TO USE PROTECED ROUTES
+const bcrypt = require("bcryptjs"); // TO USE ENCRYPTION FOR PASSWORD
 const User = require("../models/User");
-const { isConnected, checkRole } = require("../middlewares");
 
 const router = express.Router();
-
-// Bcrypt to encrypt passwords
-const bcrypt = require("bcryptjs");
 const bcryptSalt = 10;
 
 // LOGIN
 router.get("/login", (req, res, next) => {
-  res.render("auth/login", { "message": req.flash("error") });
+  res.render("auth/login", { message: req.flash("error") });
 });
-router.post("/login", passport.authenticate("local", {
-  successRedirect: "/",
-  failureRedirect: "/auth/login",
-  failureFlash: true,
-  passReqToCallback: true
-}));
+router.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/auth/login",
+    failureFlash: true,
+    passReqToCallback: true
+  })
+);
 
 // SIGNUP
-router.get("/signup", checkRole("Boss"), (req, res, next) => {
+router.get("/signup", (req, res, next) => {
   res.render("auth/signup");
 });
-router.post("/signup", checkRole("Boss"), (req, res, next) => {
-  const username = req.body.username;
-  const password = req.body.password;
-  const role = req.body.role;
+router.post("/signup", (req, res, next) => {
+  const { username, password } = req.body;
+
+  // DATA VALIDATION AND AFTER SUCCESS USER CREATION
   if (username === "" || password === "") {
     res.render("auth/signup", { message: "Indicate username and password" });
     return;
@@ -44,21 +44,21 @@ router.post("/signup", checkRole("Boss"), (req, res, next) => {
 
     const newUser = new User({
       username,
-      password: hashPass,
-      role
+      password: hashPass
     });
 
-    newUser.save()
-    .then(() => {
-      res.redirect("/");
-    })
-    .catch(err => {
-      res.render("auth/signup", { message: "Something went wrong" });
-    })
+    newUser
+      .save()
+      .then(() => {
+        res.redirect("./login");
+      })
+      .catch(err => {
+        res.render("auth/signup", { message: "Something went wrong" });
+      });
   });
 });
 
-
+// LOGOUT
 router.get("/logout", (req, res) => {
   req.logout();
   res.redirect("/");

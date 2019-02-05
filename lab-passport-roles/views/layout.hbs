@@ -10,17 +10,14 @@
 </head>
 
 <body>
-
   <nav>
     <a href="/">Home</a>
     {{#if isNotConnected}}
+    <a href="/auth/signup">Signup</a>
     <a href="/auth/login">Login</a>
     {{/if}}
-    {{#if isBoss}}
-    <a href="/auth/signup">Add user</a>
-    {{/if}}
     {{#if isConnected}}
-    <a href="/users">All users</a>
+    <a href="/private/secret">Secret page</a>
     <a href="/auth/logout">Logout</a>
     {{/if}}
   </nav>
