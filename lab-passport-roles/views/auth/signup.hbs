@@ -1,0 +1,29 @@
+<h1>Add user</h1>
+
+<form action="/auth/signup" method="POST" id="form-container">
+  <label for="username">Username</label>
+  <input id="username" type="text" name="username" placeholder="JonSnow">
+
+  <br><br>
+
+  <label for="password">Password</label>
+  <input id="password" type="password" name="password" placeholder="Your password">
+
+  <br><br>
+
+  <label for="role">Role</label>
+  <select name="role" id="">
+    <option value="Boss">Boss</option>
+    <option value="Developer">Developer</option>
+    <option value="TA">TA</option>
+  </select>
+  <br>
+  {{#if message }}
+  <div class="error-message">{{ message }}</div>
+  {{/if}}
+
+  <br><br>
+
+  <button>Add user</button>
+
+</form>
